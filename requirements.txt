@@ -41,7 +41,7 @@ pycparser==2.18
 Pygments==2.2.0
 PyNaCl==1.2.1
 pyparsing==2.2.0
-python-dateutil==2.7.3
+python-dateutil==2.8.0
 pytz==2018.4
 pyzmq==17.0.0
 qtconsole==4.3.1
