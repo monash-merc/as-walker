@@ -4,12 +4,13 @@ asfiles.py script can be used to automate walking AS SFTP service and gather inf
 # Running walker script
 - Install python dependencies by running
 `pip install requirements.txt `
-- Note, you might need to alter script params in the main section at the bottom of asfiles.py. Alter follwing fields:
+- This script can be configured by changing `config.yml` file located in the root directory. You can change values in 
+provided sample `config.yaml` file 
 ```
-    epns_path = "path/to/list/of/epns/in/excel"
-    hostname = 'sftp.synchrotron.org.au'
-    user = 'yourusername@yourinstitute.org'
-    key_path = '/path/to/key'
+    epns_path: 'data/monash_epns'
+    hostname: 'sftp.synchrotron.org.au'
+    user: 'help@massive.org.au'
+    key_path : '/home/ubuntu/.ssh/mx_key'
 ```
 - Run `python asfiles.py`
 

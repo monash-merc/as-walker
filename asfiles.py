@@ -6,10 +6,12 @@ import stat
 import pandas as pd
 import paramiko
 import sqlite3
+import yaml
 from itertools import chain
 from multiprocessing import Process, Queue
 from paramiko.client import SSHClient
 from tqdm import tqdm
+
 
 def list_sftp_epns(host, user, key_path, data_path):
     with SSHClient() as ssh:
@@ -20,8 +22,10 @@ def list_sftp_epns(host, user, key_path, data_path):
             sftp.chdir(data_path)
             return sftp.listdir()
 
+
 def is_dir(sftp_attr):
     return stat.S_ISDIR(sftp_attr.st_mode)
+
 
 def list_all_files(sftp_client, path):
     sftp_client.chdir(path)
@@ -34,6 +38,7 @@ def list_all_files(sftp_client, path):
                 yield x
         else:
             yield os.path.join(path, name)
+
 
 def create_file(sftp, epn, path):
     try:
@@ -52,6 +57,7 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
+
 class Worker(object):
     def __init__(self, name, queue, process, db):
         self.name = name
@@ -59,8 +65,8 @@ class Worker(object):
         self.process = process
         self.db = db
 
-def epn_worker(i, queue, db_path, epns, hostname, user, key_path):
 
+def epn_worker(i, queue, db_path, epns, hostname, user, key_path):
     logging.basicConfig(filename="worker{}_errors.log".format(1), level=logging.ERROR)
 
     with SSHClient() as ssh:
@@ -80,7 +86,7 @@ def epn_worker(i, queue, db_path, epns, hostname, user, key_path):
                 with conn:
                     conn.executemany("insert into files(epn, path, size, modified) values (?, ?, ?, ?)", files)
 
-                queue.put(i+1)
+                queue.put(i + 1)
 
             conn.close()
 
@@ -110,14 +116,27 @@ def process_epns(epns, hostname, user, key_path, processes=4):
         for worker in workers:
             worker.process.join()
 
-if __name__ == '__main__':
-    epns_path = "data/monash_epns"
-    epns_names = os.listdir(epns_path)
-    hostname = 'sftp.synchrotron.org.au'
-    user = 'help@massive.org.au'
-    key_path = '/home/ubuntu/.ssh/mx_key'
 
-    epns = { name: pd.read_excel(os.path.join(epns_path, name)) for name in epns_names }
+if __name__ == '__main__':
+    try:
+        config_file = open("config.yml", "r")
+    except IOError:
+        print('Config file not found')
+        exit(1)
+    else:
+        try:
+            cfg = yaml.load(config_file, Loader=yaml.FullLoader)
+            epns_path = cfg["epns_path"]
+            hostname = cfg["hostname"]
+            user = cfg["user"]
+            key_path = cfg["key_path"]
+        except yaml.YAMLError as e:
+            print(e)
+            exit(1)
+
+    print("Config loaded: ", cfg)
+    epns_names = os.listdir(epns_path)
+    epns = {name: pd.read_excel(os.path.join(epns_path, name)) for name in epns_names}
     epns = pd.concat(epns).reset_index()
     epns.columns = ["File name", "File index", "EPN", "Start", "End", "Title", "Firt name", "Last name", "Email"]
 

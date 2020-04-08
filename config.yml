@@ -1,0 +1,4 @@
+epns_path: 'data/monash_epns'
+hostname: 'sftp.synchrotron.org.au'
+user: 'help@massive.org.au'
+key_path : '/home/ubuntu/.ssh/mx_key'
